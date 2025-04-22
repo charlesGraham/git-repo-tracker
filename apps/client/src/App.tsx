@@ -6,28 +6,53 @@ import {
   MARK_RELEASE_AS_SEEN,
   MARK_ALL_RELEASES_AS_SEEN,
   SYNC_REPOSITORY,
+  TRACK_REPOSITORY,
+  REMOVE_REPOSITORY,
 } from "./graphql/queries";
 
 function App() {
   const [newRepo, setNewRepo] = useState("");
   const [sortByUnseen, setSortByUnseen] = useState(true);
   const { loading, error, data, refetch } = useQuery(GET_REPOSITORIES);
+  const [trackRepository] = useMutation(TRACK_REPOSITORY);
   const [syncRepository] = useMutation(SYNC_REPOSITORY);
   const [markReleaseAsSeen] = useMutation(MARK_RELEASE_AS_SEEN);
   const [markAllAsSeen] = useMutation(MARK_ALL_RELEASES_AS_SEEN);
+  const [removeRepository] = useMutation(REMOVE_REPOSITORY);
 
   const handleAddRepository = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRepo) return;
 
+    // Parse owner and name from input
+    const [owner, name] = newRepo.split("/");
+    if (!owner || !name) {
+      alert("Please enter a valid repository in the format 'owner/name'");
+      return;
+    }
+
     try {
-      await syncRepository({
-        variables: { fullName: newRepo },
+      // First track the repository
+      const trackResult = await trackRepository({
+        variables: { owner, name },
       });
+
+      if (!trackResult.data?.trackRepository?.id) {
+        throw new Error("Failed to track repository");
+      }
+
+      // Then sync the repository using its ID
+      await syncRepository({
+        variables: { id: trackResult.data.trackRepository.id },
+      });
+
       setNewRepo("");
       refetch();
     } catch (err) {
       console.error("Error adding repository:", err);
+      alert(
+        `Error adding repository: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -53,8 +78,21 @@ function App() {
     }
   };
 
+  const handleRemoveRepository = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this repository?")) return;
+
+    try {
+      await removeRepository({
+        variables: { id },
+      });
+      refetch();
+    } catch (err) {
+      console.error("Error removing repository:", err);
+    }
+  };
+
   const getUnseenCount = (releases: any[]) => {
-    return releases.filter((release) => !release.seen).length;
+    return releases ? releases.filter((release) => !release.seen).length : 0;
   };
 
   const sortedRepositories = useMemo(() => {
@@ -114,7 +152,7 @@ function App() {
               <div className="repo-header">
                 <h2>
                   <a
-                    href={repo.htmlUrl}
+                    href={`https://github.com/${repo.fullName}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -124,22 +162,53 @@ function App() {
                 {unseenCount > 0 && (
                   <span className="unseen-badge">{unseenCount}</span>
                 )}
+                <button
+                  onClick={() => handleRemoveRepository(repo.id)}
+                  className="remove-btn"
+                  title="Remove repository"
+                >
+                  ×
+                </button>
               </div>
-              <p>{repo.description}</p>
+
+              {repo.description && (
+                <p className="repo-description">{repo.description}</p>
+              )}
+
+              <div className="repo-stats">
+                <span title="Stars">⭐ {repo.stargazersCount}</span>
+                <span title="Forks">🍴 {repo.forksCount}</span>
+                <span title="Watchers">👀 {repo.watchersCount}</span>
+                <span title="Open Issues">📝 {repo.openIssuesCount}</span>
+                <span title="Last Synced">
+                  🔄 {new Date(repo.lastSyncedAt).toLocaleString()}
+                </span>
+              </div>
 
               <div className="releases-header">
                 <h3>Latest Releases</h3>
-                {unseenCount > 0 && (
+                <div className="releases-actions">
                   <button
-                    onClick={() => handleMarkAllAsSeen(repo.id)}
-                    className="mark-all-btn"
+                    onClick={() =>
+                      syncRepository({ variables: { id: repo.id } })
+                    }
+                    className="sync-btn"
+                    title="Sync releases"
                   >
-                    Mark all as seen
+                    🔄 Sync
                   </button>
-                )}
+                  {unseenCount > 0 && (
+                    <button
+                      onClick={() => handleMarkAllAsSeen(repo.id)}
+                      className="mark-all-btn"
+                    >
+                      Mark all as seen
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {repo.releases.length > 0 ? (
+              {repo.releases && repo.releases.length > 0 ? (
                 <ul className="releases-list">
                   {repo.releases.map((release: any) => (
                     <li
@@ -181,7 +250,7 @@ function App() {
           );
         })}
 
-        {data?.repositories.length === 0 && (
+        {data?.repositories && data.repositories.length === 0 && (
           <p>No repositories found. Add one to get started!</p>
         )}
       </div>
