@@ -1,16 +1,17 @@
 # GitHub Repository Tracker - Frontend
 
-This React application provides a user interface for tracking GitHub repositories and their releases. It's built with React, TypeScript, Vite, and Apollo Client to interact with the NestJS GraphQL API.
+This React application provides a user interface for tracking GitHub repositories and their releases. It's built with React, TypeScript, Vite, Apollo Client, and React Toastify to interact with the NestJS GraphQL API.
 
 ## Features
 
 - Track GitHub repositories by owner/name format
 - View repository details (stars, forks, watchers, open issues)
-- Display repository releases with their details
+- Display repository releases with their details in collapsible accordions
 - Mark releases as seen individually or all at once
 - Sync repositories to fetch the latest releases
 - Remove tracked repositories
 - Sort repositories by those with unseen releases
+- Toast notifications for all operations (success, error, loading states)
 
 ## Tech Stack
 
@@ -18,9 +19,18 @@ This React application provides a user interface for tracking GitHub repositorie
 - **TypeScript**: For type-safe code
 - **Vite**: Fast build tool and development server
 - **Apollo Client**: GraphQL client for React
+- **React Toastify**: For toast notifications
 - **CSS**: Custom styling with CSS variables for theming
 
 ## Architecture
+
+### Component Structure
+
+The application follows a component-based architecture:
+
+- **App.tsx**: Main application component that handles API calls and state management
+- **RepositoryCard.tsx**: Reusable component for displaying repository details with accordion UI
+- **Types.ts**: TypeScript interfaces for the application's data models
 
 ### Apollo Client Setup
 
@@ -69,27 +79,102 @@ All GraphQL queries and mutations are defined in `src/graphql/queries.ts`:
 - `MARK_ALL_RELEASES_AS_SEEN`: Marks all releases for a repository as seen
 - `REMOVE_REPOSITORY`: Removes a repository from tracking
 
-### Component Structure
+### Toast Notifications
 
-The main application component in `src/App.tsx` handles:
+The application uses React Toastify to display notifications for various operations:
 
-1. **State Management**:
-   - Repository data from GraphQL queries
-   - Form state for adding new repositories
-   - Sorting preferences for repositories
+- Loading toasts for operations in progress (syncing, adding repositories)
+- Success toasts for completed operations
+- Error toasts for failed operations
+- Custom toast styling and positioning
 
-2. **User Interactions**:
-   - Adding repositories (`handleAddRepository`)
-   - Marking releases as seen (`handleMarkAsSeen`)
-   - Marking all releases as seen (`handleMarkAllAsSeen`)
-   - Removing repositories (`handleRemoveRepository`)
-   - Syncing repositories to fetch latest releases
+Example implementation:
 
-3. **Data Processing**:
-   - Sorting repositories based on unseen releases
-   - Calculating unseen release counts
+```typescript
+// Show loading toast
+const pendingToastId = toast.loading(`Adding ${owner}/${name}...`);
 
-### Styling
+try {
+  // Perform operation
+  // ...
+  
+  // Update to success toast
+  toast.update(pendingToastId, {
+    render: `Successfully added ${owner}/${name}`,
+    type: "success",
+    isLoading: false,
+    autoClose: 3000,
+    closeButton: true
+  });
+} catch (err) {
+  // Update to error toast
+  toast.update(pendingToastId, {
+    render: `Error: ${err instanceof Error ? err.message : String(err)}`,
+    type: "error",
+    isLoading: false,
+    autoClose: 5000,
+    closeButton: true
+  });
+}
+```
+
+### Accordion UI for Repository Releases
+
+Each repository is displayed in a card with an accordion-style UI for viewing releases:
+
+- Repository details are always visible (name, stars, forks, etc.)
+- Releases are hidden by default and can be expanded/collapsed
+- Visual indicators for repositories with unseen releases
+- Smooth transitions for accordion opening/closing
+
+## API Interaction Flow
+
+### Adding a Repository
+
+1. User enters repository in format `owner/name` (e.g., `facebook/react`)
+2. Loading toast is displayed
+3. Application calls the `trackRepository` mutation with `owner` and `name` parameters
+4. After successful tracking, it calls the `syncRepository` mutation to fetch releases
+5. Success toast is displayed
+6. The UI refreshes to display the newly added repository with its releases
+
+### Syncing Repositories
+
+1. User clicks the "Sync" button on a repository card
+2. Loading toast is displayed
+3. Application calls the `syncRepository` mutation with the repository ID
+4. The API fetches the latest releases from GitHub
+5. Success toast is displayed
+6. The UI refreshes to display any new releases
+
+### Marking Releases as Seen
+
+1. User clicks "Mark as seen" on an unseen release
+2. Application calls the `markReleaseSeen` mutation with the release ID
+3. The UI updates to show the release as seen
+4. Unseen release count badge is updated
+
+### Removing Repositories
+
+1. User clicks the remove button on a repository card
+2. Confirmation dialog is shown
+3. If confirmed, the repository is removed from tracking
+4. Success toast is displayed
+
+## Repository Card Component
+
+The `RepositoryCard` component encapsulates:
+
+- Repository details display
+- Accordion functionality for releases
+- Action buttons for repository operations
+- UI states for seen/unseen releases
+
+The component accepts props for:
+- Repository data
+- Callback functions for various actions
+
+## Styling
 
 The application uses CSS variables for theming in `src/App.css`:
 
@@ -103,41 +188,9 @@ The application uses CSS variables for theming in `src/App.css`:
   --secondary-text: #586069;
   --unseen-bg: #fffbea;
   --success-color: #2ea44f;
+  --badge-color: #f85149;
 }
 ```
-
-## API Interaction Flow
-
-### Adding a Repository
-
-1. User enters repository in format `owner/name` (e.g., `facebook/react`)
-2. Application calls the `trackRepository` mutation with `owner` and `name` parameters
-3. After successful tracking, it calls the `syncRepository` mutation to fetch releases
-4. The UI refreshes to display the newly added repository with its releases
-
-### Syncing Repositories
-
-1. User clicks the "Sync" button on a repository card
-2. Application calls the `syncRepository` mutation with the repository ID
-3. The API fetches the latest releases from GitHub
-4. The UI refreshes to display any new releases
-
-### Marking Releases as Seen
-
-1. User clicks "Mark as seen" on an unseen release
-2. Application calls the `markReleaseSeen` mutation with the release ID
-3. The UI updates to show the release as seen
-4. Unseeded release count badge is updated
-
-### Viewing Repository Details
-
-The repository card displays:
-- Repository name and owner with link to GitHub
-- Description (if available)
-- Stats (stars, forks, watchers, open issues)
-- Last sync time
-- List of releases with publish dates
-- Unseen release count badge
 
 ## NestJS Backend Integration
 
@@ -176,14 +229,17 @@ The build output will be in the `dist` directory.
 
 This application follows these best practices:
 
-1. **Type Safety**: Uses TypeScript for all code
-2. **Error Handling**: Proper error handling for all API operations
-3. **Responsive Design**: Works on mobile and desktop
-4. **Performance**: 
+1. **Component Organization**: Separated UI components into reusable pieces
+2. **Type Safety**: Uses TypeScript interfaces for data and props
+3. **Error Handling**: Proper error handling with toast notifications
+4. **Responsive Design**: Works on mobile and desktop
+5. **Performance**: 
    - Uses Apollo Client cache for efficient data management
    - Optimizes rendering with React hooks like useMemo
-5. **User Experience**:
-   - Shows loading states during API operations
-   - Provides clear error messages
+   - Lazy loading of content with accordion UI
+6. **User Experience**:
+   - Toast notifications for all operations
+   - Loading states with visual feedback
+   - Accordion UI to manage visual complexity
    - Sorts repositories by relevance (unseen releases first)
-   - Uses visual indicators for unseen content
+   - Visual indicators for unseen content
