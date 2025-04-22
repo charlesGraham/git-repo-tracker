@@ -81,12 +81,46 @@ export class RepositoriesService {
     repository.openIssuesCount = ghRepo.open_issues_count;
     repository.lastSyncedAt = new Date();
 
-    // Save the repository
+    // Save the repository to get its ID
     const savedRepo = await this.repositoriesRepository.save(repository);
 
-    // Sync releases
-    await this.syncReleases(savedRepo.id);
+    // Now get the releases directly without using our syncReleases method
+    try {
+      const ghReleases: GitHubRelease[] = await this.githubService.getReleases(
+        owner,
+        name,
+      );
 
+      // Process each release separately
+      for (const ghRelease of ghReleases) {
+        const release = new Release();
+        release.tagName = ghRelease.tag_name;
+        release.name = ghRelease.name || '';
+        release.body = ghRelease.body || '';
+        release.htmlUrl = ghRelease.html_url;
+        release.publishedAt = ghRelease.published_at
+          ? new Date(ghRelease.published_at)
+          : new Date();
+        release.seen = false;
+        release.repositoryId = savedRepo.id;
+
+        // Save each release individually
+        await this.releasesRepository.save(release);
+      }
+
+      // Mark the repository if there are releases
+      if (ghReleases.length > 0) {
+        savedRepo.hasUnseenReleases = true;
+        await this.repositoriesRepository.save(savedRepo);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch releases for ${savedRepo.fullName}: ${error.message}`,
+      );
+      // Don't rethrow - we still have the repository even if releases fail
+    }
+
+    // Get the final repository with all its data
     return this.findOne(savedRepo.id);
   }
 
@@ -146,10 +180,9 @@ export class RepositoriesService {
             ? new Date(ghRelease.published_at)
             : new Date();
           release.seen = false;
-          release.repository = repository;
-          release.repositoryId = repository.id;
+          release.repositoryId = repositoryId;
 
-          // Save the release
+          // Save each release individually
           await this.releasesRepository.save(release);
           hasNewReleases = true;
         }
