@@ -9,6 +9,8 @@ import {
   TRACK_REPOSITORY,
   REMOVE_REPOSITORY,
 } from "./graphql/queries";
+import { Repository, Release } from "./types";
+import RepositoryCard from "./components/RepositoryCard";
 
 function App() {
   const [newRepo, setNewRepo] = useState("");
@@ -91,7 +93,18 @@ function App() {
     }
   };
 
-  const getUnseenCount = (releases: any[]) => {
+  const handleSyncRepository = async (id: string) => {
+    try {
+      await syncRepository({
+        variables: { id },
+      });
+      refetch();
+    } catch (err) {
+      console.error("Error syncing repository:", err);
+    }
+  };
+
+  const getUnseenCount = (releases: Release[]) => {
     return releases ? releases.filter((release) => !release.seen).length : 0;
   };
 
@@ -145,110 +158,16 @@ function App() {
       )}
 
       <div className="repositories-container">
-        {sortedRepositories.map((repo: any) => {
-          const unseenCount = getUnseenCount(repo.releases);
-          return (
-            <div key={repo.id} className="repository-card">
-              <div className="repo-header">
-                <h2>
-                  <a
-                    href={`https://github.com/${repo.fullName}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {repo.fullName}
-                  </a>
-                </h2>
-                {unseenCount > 0 && (
-                  <span className="unseen-badge">{unseenCount}</span>
-                )}
-                <button
-                  onClick={() => handleRemoveRepository(repo.id)}
-                  className="remove-btn"
-                  title="Remove repository"
-                >
-                  ×
-                </button>
-              </div>
-
-              {repo.description && (
-                <p className="repo-description">{repo.description}</p>
-              )}
-
-              <div className="repo-stats">
-                <span title="Stars">⭐ {repo.stargazersCount}</span>
-                <span title="Forks">🍴 {repo.forksCount}</span>
-                <span title="Watchers">👀 {repo.watchersCount}</span>
-                <span title="Open Issues">📝 {repo.openIssuesCount}</span>
-                <span title="Last Synced">
-                  🔄 {new Date(repo.lastSyncedAt).toLocaleString()}
-                </span>
-              </div>
-
-              <div className="releases-header">
-                <h3>Latest Releases</h3>
-                <div className="releases-actions">
-                  <button
-                    onClick={() =>
-                      syncRepository({ variables: { id: repo.id } })
-                    }
-                    className="sync-btn"
-                    title="Sync releases"
-                  >
-                    🔄 Sync
-                  </button>
-                  {unseenCount > 0 && (
-                    <button
-                      onClick={() => handleMarkAllAsSeen(repo.id)}
-                      className="mark-all-btn"
-                    >
-                      Mark all as seen
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {repo.releases && repo.releases.length > 0 ? (
-                <ul className="releases-list">
-                  {repo.releases.map((release: any) => (
-                    <li
-                      key={release.id}
-                      className={
-                        release.seen ? "release seen" : "release unseen"
-                      }
-                    >
-                      <div className="release-info">
-                        <h4>
-                          <a
-                            href={release.htmlUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {release.name || release.tagName}
-                          </a>
-                        </h4>
-                        <p>
-                          Published:{" "}
-                          {new Date(release.publishedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {!release.seen && (
-                        <button
-                          onClick={() => handleMarkAsSeen(release.id)}
-                          className="mark-seen-btn"
-                        >
-                          Mark as seen
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No releases found</p>
-              )}
-            </div>
-          );
-        })}
+        {sortedRepositories.map((repo: Repository) => (
+          <RepositoryCard
+            key={repo.id}
+            repo={repo}
+            onMarkAsSeen={handleMarkAsSeen}
+            onMarkAllAsSeen={handleMarkAllAsSeen}
+            onSync={handleSyncRepository}
+            onRemove={handleRemoveRepository}
+          />
+        ))}
 
         {data?.repositories && data.repositories.length === 0 && (
           <p>No repositories found. Add one to get started!</p>

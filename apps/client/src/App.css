@@ -105,16 +105,20 @@ button:hover {
 
 .releases-list {
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .release {
   padding: 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.release:last-child {
+  border-bottom: none;
 }
 
 .release.unseen {
@@ -288,4 +292,63 @@ button:hover {
   width: 16px;
   height: 16px;
   cursor: pointer;
+}
+
+.accordion {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  position: relative;
+  background-color: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.accordion-header:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.accordion-header .releases-header {
+  flex: 1;
+  margin: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
+.accordion-icon {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  margin-left: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.accordion-icon.expanded {
+  transform: rotate(0deg);
+}
+
+.accordion-content {
+  padding: 0;
+  background-color: var(--card-bg);
+}
+
+.release-count {
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: var(--secondary-text);
+  margin-left: 0.5rem;
+}
+
+.accordion-content p {
+  padding: 1rem;
+  margin: 0;
+  color: var(--secondary-text);
+  font-style: italic;
 }
