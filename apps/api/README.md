@@ -50,8 +50,8 @@ PORT=3000
 # Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
+DB_USERNAME=db_username
+DB_PASSWORD=db_password
 DB_DATABASE=github_tracker
 
 # GitHub API
