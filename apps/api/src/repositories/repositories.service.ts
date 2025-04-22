@@ -146,8 +146,10 @@ export class RepositoriesService {
             ? new Date(ghRelease.published_at)
             : new Date();
           release.seen = false;
+          release.repository = repository;
           release.repositoryId = repository.id;
 
+          // Save the release
           await this.releasesRepository.save(release);
           hasNewReleases = true;
         }

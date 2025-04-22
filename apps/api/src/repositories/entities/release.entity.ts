@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Repository } from './repository.entity';
@@ -48,7 +49,10 @@ export class Release {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => Repository, (repository) => repository.releases)
+  @ManyToOne(() => Repository, (repository) => repository.releases, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'repositoryId' })
   repository: Repository;
 
   @Field()
