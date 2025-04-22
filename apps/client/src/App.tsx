@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import {
   GET_REPOSITORIES,
@@ -26,15 +28,15 @@ function App() {
     e.preventDefault();
     if (!newRepo) return;
 
-    // Parse owner and name from input
     const [owner, name] = newRepo.split("/");
     if (!owner || !name) {
-      alert("Please enter a valid repository in the format 'owner/name'");
+      toast.error("Please enter a valid repository in the format 'owner/name'");
       return;
     }
 
+    const pendingToastId = toast.loading(`Adding ${owner}/${name}...`);
+
     try {
-      // First track the repository
       const trackResult = await trackRepository({
         variables: { owner, name },
       });
@@ -43,18 +45,30 @@ function App() {
         throw new Error("Failed to track repository");
       }
 
-      // Then sync the repository using its ID
       await syncRepository({
         variables: { id: trackResult.data.trackRepository.id },
+      });
+
+      toast.update(pendingToastId, {
+        render: `Successfully added ${owner}/${name}`,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
       });
 
       setNewRepo("");
       refetch();
     } catch (err) {
       console.error("Error adding repository:", err);
-      alert(
-        `Error adding repository: ${err instanceof Error ? err.message : String(err)}`
-      );
+
+      toast.update(pendingToastId, {
+        render: `Error adding ${owner}/${name}: ${err instanceof Error ? err.message : String(err)}`,
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+        closeButton: true,
+      });
     }
   };
 
@@ -66,6 +80,9 @@ function App() {
       refetch();
     } catch (err) {
       console.error("Error marking release as seen:", err);
+      toast.error(
+        `Error marking release as seen: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -77,6 +94,9 @@ function App() {
       refetch();
     } catch (err) {
       console.error("Error marking all releases as seen:", err);
+      toast.error(
+        `Error marking all releases as seen: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -87,20 +107,48 @@ function App() {
       await removeRepository({
         variables: { id },
       });
+      toast.success("Repository removed successfully");
       refetch();
     } catch (err) {
       console.error("Error removing repository:", err);
+      toast.error(
+        `Error removing repository: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
   const handleSyncRepository = async (id: string) => {
+    const repository = data?.repositories.find(
+      (repo: Repository) => repo.id === id
+    );
+    const pendingToastId = toast.loading(
+      `Syncing ${repository?.fullName || "repository"}...`
+    );
+
     try {
       await syncRepository({
         variables: { id },
       });
+
+      toast.update(pendingToastId, {
+        render: `${repository?.fullName || "Repository"} synced successfully`,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
+      });
+
       refetch();
     } catch (err) {
       console.error("Error syncing repository:", err);
+
+      toast.update(pendingToastId, {
+        render: `Error syncing repository: ${err instanceof Error ? err.message : String(err)}`,
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+        closeButton: true,
+      });
     }
   };
 
@@ -116,12 +164,12 @@ function App() {
       const bUnseenCount = getUnseenCount(b.releases);
 
       if (sortByUnseen) {
-        // Sort by unseen count (descending), then alphabetically by name
+        // descending order
         return (
           bUnseenCount - aUnseenCount || a.fullName.localeCompare(b.fullName)
         );
       } else {
-        // Sort alphabetically by name
+        // ascending order
         return a.fullName.localeCompare(b.fullName);
       }
     });
@@ -129,6 +177,19 @@ function App() {
 
   return (
     <div className="app-container">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
       <h1>GitHub Repository Tracker</h1>
 
       <form onSubmit={handleAddRepository} className="add-repo-form">
