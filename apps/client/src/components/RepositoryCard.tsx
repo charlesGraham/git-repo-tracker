@@ -100,46 +100,50 @@ const RepositoryCard = ({
           </span>
         </div>
 
-        {expanded && (
-          <div className="accordion-content">
-            {repo.releases && repo.releases.length > 0 ? (
-              <ul className="releases-list">
-                {repo.releases.map((release: Release) => (
-                  <li
-                    key={release.id}
-                    className={release.seen ? "release seen" : "release unseen"}
-                  >
-                    <div className="release-info">
-                      <h4>
-                        <a
-                          href={release.htmlUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+        <div className={`accordion-content ${expanded ? "expanded" : ""}`}>
+          {expanded && (
+            <>
+              {repo.releases && repo.releases.length > 0 ? (
+                <ul className="releases-list">
+                  {repo.releases.map((release: Release) => (
+                    <li
+                      key={release.id}
+                      className={
+                        release.seen ? "release seen" : "release unseen"
+                      }
+                    >
+                      <div className="release-info">
+                        <h4>
+                          <a
+                            href={release.htmlUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {release.name || release.tagName}
+                          </a>
+                        </h4>
+                        <p>
+                          Published:{" "}
+                          {new Date(release.publishedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {!release.seen && (
+                        <button
+                          onClick={() => onMarkAsSeen(release.id)}
+                          className="mark-seen-btn"
                         >
-                          {release.name || release.tagName}
-                        </a>
-                      </h4>
-                      <p>
-                        Published:{" "}
-                        {new Date(release.publishedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {!release.seen && (
-                      <button
-                        onClick={() => onMarkAsSeen(release.id)}
-                        className="mark-seen-btn"
-                      >
-                        Mark as seen
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No releases found</p>
-            )}
-          </div>
-        )}
+                          Mark as seen
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No releases found</p>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
