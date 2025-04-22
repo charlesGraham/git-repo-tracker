@@ -1,0 +1,52 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Mutation {
+  markAllReleasesSeen(repositoryId: ID!): Repository!
+  markReleaseSeen(releaseId: ID!): Release!
+  removeRepository(id: ID!): Boolean!
+  syncAllRepositories: Boolean!
+  syncRepository(id: ID!): Repository!
+  trackRepository(name: String!, owner: String!): Repository!
+}
+
+type Query {
+  repositories: [Repository!]!
+  repository(id: ID!): Repository!
+}
+
+type Release {
+  body: String
+  createdAt: DateTime!
+  htmlUrl: String!
+  id: ID!
+  name: String
+  publishedAt: DateTime!
+  repositoryId: String!
+  seen: Boolean!
+  tagName: String!
+  updatedAt: DateTime!
+}
+
+type Repository {
+  createdAt: DateTime!
+  description: String
+  forksCount: Float!
+  fullName: String!
+  hasUnseenReleases: Boolean!
+  id: ID!
+  lastSyncedAt: DateTime!
+  name: String!
+  openIssuesCount: Float!
+  owner: String!
+  releases: [Release!]
+  stargazersCount: Float!
+  updatedAt: DateTime!
+  watchersCount: Float!
+}

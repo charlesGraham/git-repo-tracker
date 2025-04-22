@@ -46,6 +46,12 @@ import configuration from './config/configuration';
         database: configService.get('database.database'),
         entities: [Repository, Release],
         synchronize: true, // Only use this for development
+        autoLoadEntities: true,
+        connectTimeoutMS: 10000, // Increase connection timeout
+        extra: {
+          max: 5, // Limit pool connections
+        },
+        logging: ['error', 'warn'], // Log errors and warnings
       }),
     }),
 
