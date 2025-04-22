@@ -28,6 +28,25 @@ The `queries.graphql` file contains a collection of example GraphQL queries and 
 - `syncAllRepositories`: Trigger a sync of all tracked repositories
 - `removeRepository(id: ID!)`: Remove a repository from tracking
 
+## Data Storage
+
+When you track a repository using the `trackRepository` mutation, the following happens:
+
+1. The API fetches repository data from GitHub's API
+2. This data is stored in your PostgreSQL database:
+   - Repository information is stored in the `repository` table
+   - Each release is stored in the `release` table with a link to its repository
+   - Repository statistics (stars, forks, etc.) are preserved
+   - All releases are initially marked as "unseen"
+
+The database serves as your local cache and source of truth for tracked repositories. This allows:
+- Offline access to repository data
+- Tracking which releases you've reviewed (seen status)
+- Determining which repositories have unseen updates
+- Periodic background syncing with GitHub
+
+When you sync a repository (manually or via scheduled task), only the data in your database is updated - the process doesn't affect the actual GitHub repository.
+
 ## Tips
 
 - After tracking a repository, use its ID in other queries and mutations
