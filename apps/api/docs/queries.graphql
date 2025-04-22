@@ -1,0 +1,152 @@
+# GitHub Repository Tracker - Sample GraphQL Queries
+
+# Track a new repository
+mutation TrackRepository {
+  trackRepository(owner: "facebook", name: "react") {
+    id
+    fullName
+    name
+    owner
+    description
+    stargazersCount
+    forksCount
+    watchersCount
+    openIssuesCount
+    hasUnseenReleases
+    lastSyncedAt
+    releases {
+      id
+      tagName
+      name
+      publishedAt
+      seen
+      htmlUrl
+    }
+  }
+}
+
+# Get all tracked repositories
+query GetAllRepositories {
+  repositories {
+    id
+    fullName
+    description
+    stargazersCount
+    forksCount
+    hasUnseenReleases
+    lastSyncedAt
+    releases {
+      id
+      tagName
+      name
+      body
+      publishedAt
+      seen
+      htmlUrl
+    }
+  }
+}
+
+# Get a specific repository by ID
+query GetRepository {
+  repository(id: "REPOSITORY_ID_HERE") {
+    id
+    fullName
+    description
+    stargazersCount
+    forksCount
+    hasUnseenReleases
+    lastSyncedAt
+    releases {
+      id
+      tagName
+      name
+      body
+      publishedAt
+      seen
+      htmlUrl
+    }
+  }
+}
+
+# Manually sync a repository to get the latest releases
+mutation SyncRepository {
+  syncRepository(id: "REPOSITORY_ID_HERE") {
+    id
+    fullName
+    hasUnseenReleases
+    lastSyncedAt
+    releases {
+      id
+      tagName
+      name
+      publishedAt
+      seen
+    }
+  }
+}
+
+# Mark a specific release as seen
+mutation MarkReleaseSeen {
+  markReleaseSeen(releaseId: "RELEASE_ID_HERE") {
+    id
+    tagName
+    seen
+  }
+}
+
+# Mark all releases for a repository as seen
+mutation MarkAllReleasesSeen {
+  markAllReleasesSeen(repositoryId: "REPOSITORY_ID_HERE") {
+    id
+    fullName
+    hasUnseenReleases
+    releases {
+      id
+      tagName
+      seen
+    }
+  }
+}
+
+# Sync all tracked repositories 
+mutation SyncAllRepositories {
+  syncAllRepositories
+}
+
+# Remove a repository from tracking
+mutation RemoveRepository {
+  removeRepository(id: "REPOSITORY_ID_HERE")
+}
+
+# More examples:
+
+# Track Next.js repository
+mutation TrackNextJs {
+  trackRepository(owner: "vercel", name: "next.js") {
+    id
+    fullName
+    description
+    hasUnseenReleases
+    releases {
+      id
+      tagName
+      publishedAt
+    }
+  }
+}
+
+# Track NestJS repository
+mutation TrackNestJs {
+  trackRepository(owner: "nestjs", name: "nest") {
+    id
+    fullName
+    description
+    hasUnseenReleases
+    releases {
+      id
+      tagName
+      publishedAt
+    }
+  }
+} 
