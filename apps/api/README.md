@@ -21,27 +21,106 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# GitHub Repository Tracker API
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is the backend API for the GitHub Repository Tracker application. It's built with NestJS, GraphQL, TypeORM, and integrates with the GitHub API to track repository releases.
 
-## Project setup
+## Features
 
-```bash
-$ npm install
+- GraphQL API to manage tracked repositories
+- PostgreSQL database to store repository and release data
+- Integration with GitHub API to fetch repository information and releases
+- Scheduled tasks to periodically sync repository data
+- Support for marking releases as seen/unseen
+
+## Prerequisites
+
+- Node.js (v16+)
+- PostgreSQL 
+- GitHub Personal Access Token (for API access)
+
+## Environment Variables
+
+Create a `.env` file in the root of the API project with the following configuration:
+
+```
+# Server Configuration
+PORT=3000
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=github_tracker
+
+# GitHub API
+GITHUB_TOKEN=your_github_token_here
+
+# Data Sync Configuration
+SYNC_INTERVAL_MINUTES=60
 ```
 
-## Compile and run the project
+## Installation
 
 ```bash
-# development
-$ npm run start
+# Install dependencies
+npm install
 
-# watch mode
-$ npm run start:dev
+# Run the development server
+npm run dev
+```
 
-# production mode
-$ npm run start:prod
+## GraphQL API
+
+Once the server is running, you can access the GraphQL Playground at `http://localhost:3000/graphql` to interact with the API.
+
+### Queries
+
+- `repositories`: Get all tracked repositories
+- `repository(id: ID!)`: Get a specific repository by ID
+
+### Mutations
+
+- `trackRepository(owner: String!, name: String!)`: Add a repository to track
+- `removeRepository(id: ID!)`: Remove a repository from tracking
+- `syncRepository(id: ID!)`: Manually sync a repository's releases
+- `markAllReleasesSeen(repositoryId: ID!)`: Mark all releases for a repository as seen
+- `markReleaseSeen(releaseId: ID!)`: Mark a specific release as seen
+- `syncAllRepositories`: Manually trigger a sync of all tracked repositories
+
+## Database Schema
+
+The application uses two main entities:
+
+### Repository
+
+Stores information about tracked GitHub repositories including:
+- Basic repository info (name, owner, description)
+- Stats (stars, forks, watchers, open issues)
+- Timestamps (created, updated, last synced)
+- Status flags (has unseen releases)
+
+### Release
+
+Stores information about repository releases:
+- Version information (tag name, name)
+- Content (body, HTML URL)
+- Publication date
+- Seen status
+- Timestamps (created, updated)
+
+## Development
+
+```bash
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+
+# Build for production
+npm run build
 ```
 
 ## Run tests
