@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository as TypeOrmRepository } from 'typeorm';
 import { Repository } from './entities/repository.entity';
 import { Release } from './entities/release.entity';
-import { GitHubService } from '../github/github.service';
+import {
+  GitHubService,
+  GitHubRepository,
+  GitHubRelease,
+} from '../github/github.service';
 
 @Injectable()
 export class RepositoriesService {
@@ -60,14 +64,17 @@ export class RepositoriesService {
     }
 
     // Fetch repository from GitHub
-    const ghRepo = await this.githubService.getRepository(owner, name);
+    const ghRepo: GitHubRepository = await this.githubService.getRepository(
+      owner,
+      name,
+    );
 
     // Create new repository entity
     const repository = new Repository();
     repository.owner = owner;
     repository.name = name;
     repository.fullName = `${owner}/${name}`;
-    repository.description = ghRepo.description;
+    repository.description = ghRepo.description || '';
     repository.stargazersCount = ghRepo.stargazers_count;
     repository.forksCount = ghRepo.forks_count;
     repository.watchersCount = ghRepo.watchers_count;
@@ -108,7 +115,7 @@ export class RepositoriesService {
 
     try {
       // Fetch releases from GitHub
-      const ghReleases = await this.githubService.getReleases(
+      const ghReleases: GitHubRelease[] = await this.githubService.getReleases(
         repository.owner,
         repository.name,
       );
@@ -132,10 +139,12 @@ export class RepositoriesService {
           // This is a new release
           const release = new Release();
           release.tagName = ghRelease.tag_name;
-          release.name = ghRelease.name;
-          release.body = ghRelease.body;
+          release.name = ghRelease.name || '';
+          release.body = ghRelease.body || '';
           release.htmlUrl = ghRelease.html_url;
-          release.publishedAt = new Date(ghRelease.published_at);
+          release.publishedAt = ghRelease.published_at
+            ? new Date(ghRelease.published_at)
+            : new Date();
           release.seen = false;
           release.repositoryId = repository.id;
 
