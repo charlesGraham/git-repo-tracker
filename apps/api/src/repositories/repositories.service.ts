@@ -21,16 +21,10 @@ export class RepositoriesService {
     private githubService: GitHubService,
   ) {}
 
-  /**
-   * Get all tracked repositories
-   */
   async findAll(): Promise<Repository[]> {
     return this.repositoriesRepository.find();
   }
 
-  /**
-   * Get a repository by ID
-   */
   async findOne(id: string): Promise<Repository> {
     const repository = await this.repositoriesRepository.findOne({
       where: { id },
@@ -41,9 +35,6 @@ export class RepositoriesService {
     return repository;
   }
 
-  /**
-   * Find a repository by owner and name
-   */
   async findByOwnerAndName(
     owner: string,
     name: string,
@@ -53,23 +44,19 @@ export class RepositoriesService {
     });
   }
 
-  /**
-   * Track a new repository
-   */
   async trackRepository(owner: string, name: string): Promise<Repository> {
-    // Check if repository already exists
+    // check if already exists
     const existingRepo = await this.findByOwnerAndName(owner, name);
     if (existingRepo) {
       return existingRepo;
     }
 
-    // Fetch repository from GitHub
+    // fetch repo from GH
     const ghRepo: GitHubRepository = await this.githubService.getRepository(
       owner,
       name,
     );
 
-    // Create new repository entity
     const repository = new Repository();
     repository.owner = owner;
     repository.name = name;
@@ -81,17 +68,14 @@ export class RepositoriesService {
     repository.openIssuesCount = ghRepo.open_issues_count;
     repository.lastSyncedAt = new Date();
 
-    // Save the repository to get its ID
     const savedRepo = await this.repositoriesRepository.save(repository);
 
-    // Now get the releases directly without using our syncReleases method
     try {
       const ghReleases: GitHubRelease[] = await this.githubService.getReleases(
         owner,
         name,
       );
 
-      // Process each release separately
       for (const ghRelease of ghReleases) {
         const release = new Release();
         release.tagName = ghRelease.tag_name;
@@ -104,11 +88,11 @@ export class RepositoriesService {
         release.seen = false;
         release.repositoryId = savedRepo.id;
 
-        // Save each release individually
+        // save
         await this.releasesRepository.save(release);
       }
 
-      // Mark the repository if there are releases
+      // mark the repo if there are releases
       if (ghReleases.length > 0) {
         savedRepo.hasUnseenReleases = true;
         await this.repositoriesRepository.save(savedRepo);
@@ -117,24 +101,16 @@ export class RepositoriesService {
       this.logger.error(
         `Failed to fetch releases for ${savedRepo.fullName}: ${error.message}`,
       );
-      // Don't rethrow - we still have the repository even if releases fail
-    }
+    } // don't rethrow - don't want it to crash just because we don't have release data.
 
-    // Get the final repository with all its data
     return this.findOne(savedRepo.id);
   }
 
-  /**
-   * Remove a repository from tracking
-   */
   async removeRepository(id: string): Promise<boolean> {
     const result = await this.repositoriesRepository.delete(id);
     return result.affected ? result.affected > 0 : false;
   }
 
-  /**
-   * Sync releases for a specific repository
-   */
   async syncReleases(repositoryId: string): Promise<Repository> {
     const repository = await this.repositoriesRepository.findOne({
       where: { id: repositoryId },
@@ -148,13 +124,12 @@ export class RepositoriesService {
     }
 
     try {
-      // Fetch releases from GitHub
       const ghReleases: GitHubRelease[] = await this.githubService.getReleases(
         repository.owner,
         repository.name,
       );
 
-      // Map of existing releases by tag name for quick lookup
+      // map of existing releases by tag name for quick lookup
       const existingReleasesByTag = new Map(
         (repository.releases || []).map((release) => [
           release.tagName,
@@ -162,15 +137,13 @@ export class RepositoriesService {
         ]),
       );
 
-      // Check if there are any new releases
+      // check for any new releases
       let hasNewReleases = false;
 
-      // Process each release from GitHub
       for (const ghRelease of ghReleases) {
         const existingRelease = existingReleasesByTag.get(ghRelease.tag_name);
 
         if (!existingRelease) {
-          // This is a new release
           const release = new Release();
           release.tagName = ghRelease.tag_name;
           release.name = ghRelease.name || '';
@@ -182,13 +155,12 @@ export class RepositoriesService {
           release.seen = false;
           release.repositoryId = repositoryId;
 
-          // Save each release individually
           await this.releasesRepository.save(release);
           hasNewReleases = true;
         }
       }
 
-      // Update repository metadata
+      // update repo metadata
       repository.lastSyncedAt = new Date();
       if (hasNewReleases) {
         repository.hasUnseenReleases = true;
@@ -196,7 +168,7 @@ export class RepositoriesService {
 
       await this.repositoriesRepository.save(repository);
 
-      // Return updated repository with releases
+      // return updated repo
       return this.findOne(repositoryId);
     } catch (error) {
       this.logger.error(
@@ -206,9 +178,6 @@ export class RepositoriesService {
     }
   }
 
-  /**
-   * Mark all releases of a repository as seen
-   */
   async markAllReleasesSeen(repositoryId: string): Promise<Repository> {
     const repository = await this.repositoriesRepository.findOne({
       where: { id: repositoryId },
@@ -221,11 +190,9 @@ export class RepositoriesService {
       );
     }
 
-    // Update all releases to seen
     if (repository.releases && repository.releases.length > 0) {
       await this.releasesRepository.update({ repositoryId }, { seen: true });
 
-      // Update repository flag
       repository.hasUnseenReleases = false;
       await this.repositoriesRepository.save(repository);
     }
@@ -233,9 +200,6 @@ export class RepositoriesService {
     return this.findOne(repositoryId);
   }
 
-  /**
-   * Mark a specific release as seen
-   */
   async markReleaseSeen(releaseId: string): Promise<Release> {
     const release = await this.releasesRepository.findOne({
       where: { id: releaseId },
@@ -248,7 +212,7 @@ export class RepositoriesService {
     release.seen = true;
     await this.releasesRepository.save(release);
 
-    // Check if all releases are now seen
+    // check if all releases are seen
     const unseenReleases = await this.releasesRepository.count({
       where: {
         repositoryId: release.repositoryId,
@@ -266,9 +230,6 @@ export class RepositoriesService {
     return release;
   }
 
-  /**
-   * Sync all repositories
-   */
   async syncAllRepositories(): Promise<void> {
     const repositories = await this.repositoriesRepository.find();
 

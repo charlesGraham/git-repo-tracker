@@ -34,7 +34,9 @@ export class GitHubService {
     const token = this.configService.get<string>('github.token');
 
     if (!token) {
-      this.logger.warn('GitHub token not provided.');
+      this.logger.warn(
+        'GitHub token not provided. Rate limits will be restricted.',
+      );
     }
 
     this.headers = {
