@@ -40,7 +40,7 @@ import configuration from './config/configuration';
         password: configService.get('database.password'),
         database: configService.get('database.database'),
         entities: [Repository, Release],
-        synchronize: true,
+        synchronize: true, // don't use in prod
         autoLoadEntities: true,
         connectTimeoutMS: 10000,
         extra: {

@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-// GitHub API Repository response interface
 export interface GitHubRepository {
   id: number;
   name: string;
@@ -12,10 +11,9 @@ export interface GitHubRepository {
   watchers_count: number;
   forks_count: number;
   open_issues_count: number;
-  [key: string]: any; // Allow other properties
+  [key: string]: any;
 }
 
-// GitHub API Release response interface
 export interface GitHubRelease {
   id: number;
   tag_name: string;
@@ -23,7 +21,7 @@ export interface GitHubRelease {
   body: string | null;
   html_url: string;
   published_at: string | null;
-  [key: string]: any; // Allow other properties
+  [key: string]: any;
 }
 
 @Injectable()
@@ -36,9 +34,7 @@ export class GitHubService {
     const token = this.configService.get<string>('github.token');
 
     if (!token) {
-      this.logger.warn(
-        'GitHub token not provided. API rate limits will be restricted.',
-      );
+      this.logger.warn('GitHub token not provided.');
     }
 
     this.headers = {
@@ -48,9 +44,6 @@ export class GitHubService {
     };
   }
 
-  /**
-   * Make an authenticated request to the GitHub API
-   */
   private async request<T>(endpoint: string): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -91,7 +84,7 @@ export class GitHubService {
    */
   async getReleases(owner: string, repo: string): Promise<GitHubRelease[]> {
     return this.request<GitHubRelease[]>(
-      `/repos/${owner}/${repo}/releases?per_page=100`,
+      `/repos/${owner}/${repo}/releases?per_page=100`, // arbitrary limit
     );
   }
 }
