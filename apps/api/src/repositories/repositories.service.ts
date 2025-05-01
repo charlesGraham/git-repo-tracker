@@ -45,13 +45,11 @@ export class RepositoriesService {
   }
 
   async trackRepository(owner: string, name: string): Promise<Repository> {
-    // check if already exists
     const existingRepo = await this.findByOwnerAndName(owner, name);
     if (existingRepo) {
       return existingRepo;
     }
 
-    // fetch repo from GH
     const ghRepo: GitHubRepository = await this.githubService.getRepository(
       owner,
       name,
@@ -92,7 +90,7 @@ export class RepositoriesService {
         await this.releasesRepository.save(release);
       }
 
-      // mark the repo if there are releases
+      // mark the repo if there are new releases
       if (ghReleases.length > 0) {
         savedRepo.hasUnseenReleases = true;
         await this.repositoriesRepository.save(savedRepo);
@@ -129,7 +127,7 @@ export class RepositoriesService {
         repository.name,
       );
 
-      // map of existing releases by tag name for quick lookup
+      // map of existing releases for quick lookup
       const existingReleasesByTag = new Map(
         (repository.releases || []).map((release) => [
           release.tagName,
