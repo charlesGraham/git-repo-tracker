@@ -19,21 +19,16 @@ import configuration from './config/configuration';
 
 @Module({
   imports: [
-    // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
     }),
-
-    // GraphQL
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: true,
     }),
-
-    // Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -45,25 +40,19 @@ import configuration from './config/configuration';
         password: configService.get('database.password'),
         database: configService.get('database.database'),
         entities: [Repository, Release],
-        synchronize: true, // Only use this for development
+        synchronize: true,
         autoLoadEntities: true,
-        connectTimeoutMS: 10000, // Increase connection timeout
+        connectTimeoutMS: 10000,
         extra: {
-          max: 5, // Limit pool connections
+          max: 5,
         },
-        logging: ['error', 'warn'], // Log errors and warnings
+        logging: ['error', 'warn'],
       }),
     }),
-
-    // Schedule tasks
     ScheduleModule.forRoot(),
-
-    // Serve static frontend
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../..', 'client', 'dist'),
     }),
-
-    // App modules
     GitHubModule,
     RepositoriesModule,
   ],
