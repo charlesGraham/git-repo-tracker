@@ -218,8 +218,6 @@ function App() {
         </div>
       )}
 
-      <div>Hi</div>
-
       <div className="repositories-container">
         {sortedRepositories.map((repo: Repository) => (
           <RepositoryCard
