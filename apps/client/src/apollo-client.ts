@@ -7,7 +7,7 @@ import {
 import { onError } from "@apollo/client/link/error";
 
 const httpLink = createHttpLink({
-  uri: "/graphql",
+  uri: "/graphql", // This will be proxied to http://localhost:3000/graphql
 });
 
 // Log any GraphQL errors or network error

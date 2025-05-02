@@ -5,6 +5,9 @@
   },
   "scripts": {
     "dev": "turbo run dev",
+    "dev:client": "cd apps/client && npm run dev",
+    "dev:api": "cd apps/api && npm run dev",
+    "dev:separate": "concurrently \"npm run dev:api\" \"npm run dev:client -- --host 0.0.0.0\"",
     "build": "turbo run build",
     "start": "node apps/api/dist/main"
   },

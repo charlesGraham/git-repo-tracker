@@ -12,7 +12,6 @@ export class RepositoriesTask {
     private readonly repositoriesService: RepositoriesService,
     private readonly configService: ConfigService,
   ) {
-    // Get the sync interval from configuration
     const syncIntervalMinutes =
       this.configService.get<number>('syncInterval') || 60;
     this.syncCronExpression = `0 */${syncIntervalMinutes} * * * *`;
