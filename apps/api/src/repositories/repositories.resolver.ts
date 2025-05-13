@@ -9,14 +9,14 @@ export class RepositoriesResolver {
 
   @Query(() => [Repository], { name: 'repositories' })
   async findAll(): Promise<Repository[]> {
-    return this.repositoriesService.findAll();
+    return await this.repositoriesService.findAll();
   }
 
   @Query(() => Repository, { name: 'repository' })
   async findOne(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<Repository> {
-    return this.repositoriesService.findOne(id);
+    return await this.repositoriesService.findOne(id);
   }
 
   @Mutation(() => Repository, { name: 'trackRepository' })
@@ -24,35 +24,35 @@ export class RepositoriesResolver {
     @Args('owner') owner: string,
     @Args('name') name: string,
   ): Promise<Repository> {
-    return this.repositoriesService.trackRepository(owner, name);
+    return await this.repositoriesService.trackRepository(owner, name);
   }
 
   @Mutation(() => Boolean, { name: 'removeRepository' })
   async removeRepository(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
-    return this.repositoriesService.removeRepository(id);
+    return await this.repositoriesService.removeRepository(id);
   }
 
   @Mutation(() => Repository, { name: 'syncRepository' })
   async syncRepository(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<Repository> {
-    return this.repositoriesService.syncReleases(id);
+    return await this.repositoriesService.syncReleases(id);
   }
 
   @Mutation(() => Repository, { name: 'markAllReleasesSeen' })
   async markAllReleasesSeen(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<Repository> {
-    return this.repositoriesService.markAllReleasesSeen(repositoryId);
+    return await this.repositoriesService.markAllReleasesSeen(repositoryId);
   }
 
   @Mutation(() => Release, { name: 'markReleaseSeen' })
   async markReleaseSeen(
     @Args('releaseId', { type: () => ID }) releaseId: string,
   ): Promise<Release> {
-    return this.repositoriesService.markReleaseSeen(releaseId);
+    return await this.repositoriesService.markReleaseSeen(releaseId);
   }
 
   @Mutation(() => Boolean, { name: 'syncAllRepositories' })
