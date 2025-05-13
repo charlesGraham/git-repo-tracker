@@ -75,7 +75,7 @@ export class GitHubService {
    * @returns Repository information from GitHub
    */
   async getRepository(owner: string, repo: string): Promise<GitHubRepository> {
-    return this.request<GitHubRepository>(`/repos/${owner}/${repo}`);
+    return await this.request<GitHubRepository>(`/repos/${owner}/${repo}`);
   }
 
   /**
@@ -85,7 +85,7 @@ export class GitHubService {
    * @returns Array of releases from GitHub
    */
   async getReleases(owner: string, repo: string): Promise<GitHubRelease[]> {
-    return this.request<GitHubRelease[]>(
+    return await this.request<GitHubRelease[]>(
       `/repos/${owner}/${repo}/releases?per_page=100`, // arbitrary limit
     );
   }
