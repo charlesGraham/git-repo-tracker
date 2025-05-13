@@ -22,7 +22,7 @@ export class RepositoriesService {
   ) {}
 
   async findAll(): Promise<Repository[]> {
-    return this.repositoriesRepository.find();
+    return await this.repositoriesRepository.find();
   }
 
   async findOne(id: string): Promise<Repository> {
@@ -39,7 +39,7 @@ export class RepositoriesService {
     owner: string,
     name: string,
   ): Promise<Repository | null> {
-    return this.repositoriesRepository.findOne({
+    return await this.repositoriesRepository.findOne({
       where: { owner, name },
     });
   }
@@ -101,7 +101,7 @@ export class RepositoriesService {
       );
     } // don't rethrow - don't want it to crash just because we don't have release data.
 
-    return this.findOne(savedRepo.id);
+    return await this.findOne(savedRepo.id);
   }
 
   async removeRepository(id: string): Promise<boolean> {
@@ -167,7 +167,7 @@ export class RepositoriesService {
       await this.repositoriesRepository.save(repository);
 
       // return updated repo
-      return this.findOne(repositoryId);
+      return await this.findOne(repositoryId);
     } catch (error) {
       this.logger.error(
         `Failed to sync releases for ${repository.fullName}: ${error.message}`,
@@ -195,7 +195,7 @@ export class RepositoriesService {
       await this.repositoriesRepository.save(repository);
     }
 
-    return this.findOne(repositoryId);
+    return await this.findOne(repositoryId);
   }
 
   async markReleaseSeen(releaseId: string): Promise<Release> {
