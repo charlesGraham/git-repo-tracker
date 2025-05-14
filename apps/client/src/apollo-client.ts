@@ -10,7 +10,7 @@ const httpLink = createHttpLink({
   uri: "/graphql", // This will be proxied to http://localhost:3000/graphql
 });
 
-// Log any GraphQL errors or network error
+// log errors
 const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
     graphQLErrors.forEach(({ message, locations, path }) => {
@@ -23,7 +23,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (networkError) console.error(`[Network error]: ${networkError}`);
 });
 
-// Combine the error link with the http link
+// combine error link with the http link
 const link = ApolloLink.from([errorLink, httpLink]);
 
 export const apolloClient = new ApolloClient({
