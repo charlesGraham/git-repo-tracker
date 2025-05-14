@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Repository, Release } from "../types";
 
-// Props for repository card component
 export interface RepositoryCardProps {
   repo: Repository;
   onMarkAsSeen: (releaseId: string) => void;
@@ -10,7 +9,6 @@ export interface RepositoryCardProps {
   onRemove: (repositoryId: string) => void;
 }
 
-// Component for the repository card
 const RepositoryCard = ({
   repo,
   onMarkAsSeen,
