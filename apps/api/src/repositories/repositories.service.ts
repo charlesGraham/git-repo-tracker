@@ -19,7 +19,7 @@ export class RepositoriesService {
     @InjectRepository(Release)
     private releasesRepository: TypeOrmRepository<Release>,
     private githubService: GitHubService,
-  ) {}
+  ) { }
 
   async findAll(): Promise<Repository[]> {
     return await this.repositoriesRepository.find();
@@ -164,7 +164,10 @@ export class RepositoriesService {
         repository.hasUnseenReleases = true;
       }
 
-      await this.repositoriesRepository.save(repository);
+      await this.repositoriesRepository.update(repository.id, {
+        lastSyncedAt: new Date(),
+        hasUnseenReleases: hasNewReleases,
+      });
 
       // return updated repo
       return await this.findOne(repositoryId);
